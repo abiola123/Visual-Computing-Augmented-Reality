@@ -1,25 +1,38 @@
+float scale = 1;
 void settings() {
 size (400, 400, P2D);
 }
 void setup() {
 }
+
+
+
 void draw() {
 background(255, 255, 255);
 My3DPoint eye = new My3DPoint(0, 0, -5000);
 My3DPoint origin = new My3DPoint(0, 0, 0);
-My3DBox input3DBox = new My3DBox(origin, 100, 150, 300);
 //rotated around x
-float[][] transform1 = rotateXMatrix(-PI/8);
-input3DBox = transformBox(input3DBox, transform1);
+My3DBox input3DBox = new My3DBox(origin, 100, 150, 300);
+float[][] transform1 = scaleMatrix(scale,scale,scale);
+input3DBox = transformBox(input3DBox,transform1);
+float[][] transform2 = translationMatrix(200,2000,0);
+input3DBox = transformBox(input3DBox,transform2);
+
+
+
+
 projectBox(eye, input3DBox).render();
-//rotated and translated
-float[][] transform2 = translationMatrix(200, 200, 0);
-input3DBox = transformBox(input3DBox, transform2);
-projectBox(eye, input3DBox).render();
-//rotated, translated, and scaled
-float[][] transform3 = scaleMatrix(2, 2, 2);
-input3DBox = transformBox(input3DBox, transform3);
-projectBox(eye, input3DBox).render();
+}
+
+void mouseDragged() 
+{
+  double delta = mouseY-pmouseY;
+  if(delta>0)
+   {
+   scale+=0.05;
+  } else {
+   scale-=0.05;
+  }
 }
 
 
@@ -166,7 +179,7 @@ My3DPoint[] a = new My3DPoint[8];
 for(int i = 0; i < 8; ++i) {
   float[] f = {box.p[i].x, box.p[i].y,box.p[i].z, 1};
   float[] vector = matrixProduct(transformMatrix, f);
-  a[i] = new My3DPoint(vector[0], vector[1], vector[2]);
+  a[i] = euclidian3DPoint(vector);
 }
 return new My3DBox(a);
 }
