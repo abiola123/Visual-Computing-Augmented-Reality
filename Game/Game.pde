@@ -19,7 +19,7 @@ stroke(0,255,0);
    line(-height/3,0,0,height/3,0,0);
   
    stroke(0,0,255);
-   line(0,0,-width/2,0,0,-width/2);
+   line(0,0,-width/2,0,0,width/2);
 fill(150, 150, 150);
 box(200, 10,200);
 }
@@ -37,13 +37,13 @@ void mouseDragged()
   }
   
   if(pmouseY - mouseY < 0) {
-    if(phi < PI/3) {
-    phi += 0.02;
+    if(phi > -PI/3) {
+    phi -= 0.02;
     }
   }
   else if(pmouseY - mouseY > 0) {
-    if(phi > -PI/3) {
-    phi -= 0.02;
+    if(phi < PI/3) {
+    phi += 0.02;
     }
   }
   }
