@@ -21,8 +21,8 @@ text("Y-rotation: " + y_degrees, 10, 50);
 fill(0,0,255);
 text("Speed: " + constant, 10, 70);
 translate(height/2, width/2, 0);
-rotateX(phi);
 rotateZ(theta);
+rotateX(phi);
 stroke(0,255,0);
    line(0,-width/4,0,0,width/4,0);
    stroke(255,0,0);
@@ -72,11 +72,11 @@ void mouseDragged()
 void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   if(e>0 && constant>0.01) {
-     constant-=0.02;
+     constant-=0.005;
   }
   
   if(e<0 && constant<0.1) {
-    constant+=0.02;
+    constant+=0.005;
   } 
   println(e);
 }
