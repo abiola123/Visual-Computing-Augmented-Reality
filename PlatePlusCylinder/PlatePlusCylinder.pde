@@ -9,7 +9,6 @@ PVector sphereLocation = new PVector();
 static final float gravityConstant = 0.1;
 static final float sphereRadius = 10;
 boolean mode_shift = false;
-//ArrayList<Cylinder> cylinders = new ArrayList<Cylinder>();
 HashMap<Cylinder,float[]> cylinders = new HashMap<Cylinder,float[]>();
 
  private final float cylinderBaseSize = 15;
@@ -216,7 +215,9 @@ sphereLocation.add(velocity);
 translate(sphereLocation.x, -15 - sphereLocation.y, -sphereLocation.z);
 sphere(10);
 fill(255, 0, 0);
+checkCylinderCollision();
 checkEdges();
+
 
 }
 
@@ -250,6 +251,17 @@ void keyPressed() {
 void keyReleased() {
    if (keyCode == SHIFT) {
   mode_shift = false;
+  }
+}
+
+void checkCylinderCollision() {
+  for(float[] c: cylinders.values()) {
+    PVector center = new PVector(c[0], 0,  -c[1]); //cela n'a aucun sens mais ça fonctionne
+    if(PVector.dist(center, sphereLocation) <= cylinderBaseSize + sphereRadius) {
+      sphereLocation.sub(velocity);
+      PVector n = (PVector.sub(sphereLocation, center)).normalize();
+      velocity = PVector.sub(velocity, n.mult(2 * PVector.dot(velocity,n)));
+    }
   }
 }
 
