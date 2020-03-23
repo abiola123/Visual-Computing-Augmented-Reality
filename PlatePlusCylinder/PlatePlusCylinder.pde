@@ -1,6 +1,7 @@
 float theta = 0;
 float phi = 0;
 float constant = 0.02;
+static final int boxSize = 200;
 PVector gravityForce = new PVector();
 PVector velocity = new PVector();
 PVector friction = new PVector();
@@ -68,7 +69,7 @@ void draw() {
    stroke(0,0,255);
    line(0,0,-width/3,0,0,width/3);
     fill(150, 150, 150);
-   box(200, 10,200);
+   box(boxSize, 10, boxSize);
    
    
    
@@ -126,11 +127,20 @@ void addCylinder() {
   
   float x = mouseX-width/2.0;
   float y= mouseY-height/2.0; 
+  
+  float allowed_limit = boxSize/2.0 - sphereRadius;
+  if((x>allowed_limit)||(y>allowed_limit)) placable = false;
+  if((x<-allowed_limit)||(y<-allowed_limit)) placable = false;
     
+  //compute distance with every cylinder and check if there is going to be an overlapping  
   for(float[] f : cylinders.values()) {
     float distance = (float)Math.sqrt((x-f[0])*(x-f[0]) + (y-f[1])*(y-f[1]));
     if(distance<2*cylinderBaseSize) placable = false;  
   }  
+  
+  //compute the distance with the ball and check if there is going to be an overlapping
+  float distance = (float)Math.sqrt((x-sphereLocation.x)*(x-sphereLocation.x) + (y-sphereLocation.y)*(y-sphereLocation.y));
+  if(distance<(cylinderBaseSize+sphereRadius)) placable =false;
   
   if(placable) {
    Cylinder c = new Cylinder(); 
