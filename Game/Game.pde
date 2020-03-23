@@ -10,7 +10,9 @@ PVector sphereLocation = new PVector();
 static final float gravityConstant = 0.1;
 static final float sphereRadius = 10;
 boolean mode_shift = false;
-HashMap<Cylinder,float[]> cylinders = new HashMap<Cylinder,float[]>();
+boolean initialized = false;
+PShape vilain;
+ParticleSystem system;
 
  private final float cylinderBaseSize = 15;
 
@@ -28,6 +30,7 @@ size(500, 500, P3D);
 
 void setup() {
 noStroke();
+vilain = loadShape("robotnik.obj");
 }
 
 
@@ -51,7 +54,6 @@ void draw() {
   text("Y-rotation: " + y_degrees, 10, 50);
   fill(0,0,255);
   text("Speed: " + constant, 10, 70);
-
   pushMatrix();
   translate(height/2, width/2, 0);
 
@@ -72,12 +74,19 @@ void draw() {
    box(boxSize, 10, boxSize);
 
 
-
-    //rotateX(-PI/2+phi);
-   //rotateZ(theta);
-  //translate(-height/2, -width/2, 0);
-   for(Cylinder d : cylinders.keySet()) {
-     float[] f = cylinders.get(d);
+   if(initialized) {
+     if(frameCount%50==0 && !mode_shift){
+     system.addParticle();
+     }
+     pushMatrix();
+     rotateX(PI/2);
+     translate(system.origin.x, system.origin.y);
+     rotateX(PI/2);
+     rotateY(PI);
+     shape(vilain, 0, 0, 100, 100);
+     popMatrix();
+     for(Cylinder d : system.particles.keySet()) {
+     float[] f = system.particles.get(d);
      pushMatrix();
      rotateX(PI/2);
      translate(f[0],f[1],0);
@@ -85,7 +94,14 @@ void draw() {
         shape(d.arguments[i]);
      }
      popMatrix();
-   } 
+   }
+   system.run();
+   //pushMatrix();
+   //rotateZ(PI);
+   //translate();
+   //shape(vilain, system.origin.y, 0, 100, 100);
+   //popMatrix();
+   }
 
    updateSphere();
 
@@ -95,18 +111,12 @@ void draw() {
    translate(mouseX, mouseY, 0);
    if(mode_shift) {
       for(int i = 0 ; i<c.arguments.length;i++) {
+      //fill(150,150,150);
       shape(c.arguments[i]);
       }
    }
 
    popMatrix();
-
-
-
-
-
-
-
 
 
 }
@@ -127,16 +137,18 @@ void addCylinder() {
 
   float x = mouseX-width/2.0;
   float y= mouseY-height/2.0; 
+  
 
   float allowed_limit = boxSize/2.0 - sphereRadius;
   if((x>allowed_limit)||(y>allowed_limit)) placable = false;
   if((x<-allowed_limit)||(y<-allowed_limit)) placable = false;
+  
 
   //compute distance with every cylinder and check if there is going to be an overlapping  
-  for(float[] f : cylinders.values()) {
+  /*for(float[] f : cylinders.values()) {
     float distance = (float)Math.sqrt((x-f[0])*(x-f[0]) + (y-f[1])*(y-f[1]));
     if(distance<2*cylinderBaseSize) placable = false;  
-  }  
+  }  */
 
   //compute the distance with the ball and check if there is going to be an overlapping
   PVector center = new PVector(x, 0,  -y);
@@ -144,9 +156,8 @@ void addCylinder() {
   if(distance<(cylinderBaseSize+sphereRadius)) placable =false;
 
   if(placable) {
-   Cylinder c = new Cylinder(); 
-   float[] f = {x,y};
-   cylinders.put(c,f);
+   system = new ParticleSystem(new PVector(x,y));
+   initialized = true;
   } else { System.out.println("not placable"); }
 }
 
@@ -226,7 +237,6 @@ sphereLocation.add(velocity);
 translate(sphereLocation.x, -15 - sphereLocation.y, -sphereLocation.z);
 sphere(10);
 fill(255, 0, 0);
-checkCylinderCollision();
 checkEdges();
 
 
@@ -265,15 +275,19 @@ void keyReleased() {
   }
 }
 
-void checkCylinderCollision() {
-  for(float[] c: cylinders.values()) {
+Cylinder checkCylinderCollision() {
+  Cylinder cylinder = null;
+  for(Cylinder d: system.particles.keySet()) {
+    float[] c = system.particles.get(d);
     PVector center = new PVector(c[0], 0,  -c[1]); //cela n'a aucun sens mais ça fonctionne
     if(PVector.dist(center, sphereLocation) <= cylinderBaseSize + sphereRadius) {
       sphereLocation.sub(velocity);
       PVector n = (PVector.sub(sphereLocation, center)).normalize();
       velocity = PVector.sub(velocity, n.mult(2 * PVector.dot(velocity,n)));
+      cylinder =  d;
     }
   }
+  return cylinder;
 }
 
 
@@ -331,4 +345,78 @@ public class Cylinder {
   arguments[2] = cover;
   }
 
+}
+
+// A class to describe a group of Particles
+class ParticleSystem { 
+HashMap<Cylinder,float[]> particles;
+PVector origin;
+
+
+ParticleSystem(PVector origin) {
+particles = new HashMap<Cylinder,float[]>();
+float[] point = {origin.x, origin.y};
+this.origin = origin.copy();
+particles.put(new Cylinder(), point);
+}
+
+void addParticle() {
+PVector center;
+int numAttempts = 100;
+ArrayList<Cylinder> list = new ArrayList<Cylinder>(particles.keySet());
+for(int i=0; i<numAttempts; i++) {
+// Pick a cylinder and its center.
+int index = int(random(list.size()));
+//println(particles);
+float[] point = particles.get(list.get(index));
+center = new PVector(point[0], point[1]);
+// Try to add an adjacent cylinder.
+float angle = random(TWO_PI);
+center.x += sin(angle) * 2*cylinderBaseSize;
+center.y += cos(angle) * 2*cylinderBaseSize;
+if(checkPosition(center)) {
+  float[] tab = {center.x, center.y};
+particles.put(new Cylinder(), tab);
+break;
+}
+}
+}
+
+// Iteratively update and display every particle,
+// and remove them from the list if their lifetime is over. 
+
+// Check if a position is available, i.e.
+// - would not overlap with particles that are already created
+// (for each particle, call checkOverlap())
+// - is inside the board boundaries
+boolean checkPosition(PVector center) {
+  float allowed_limit = boxSize/2.0 - sphereRadius;
+  float x = center.x;
+  float y = center.y;
+  //println("(x,y) = (" + x + "," + y + ")");
+  PVector c1 = new PVector(center.x, 0,  -center.y); //cela n'a aucun sens mais ça fonctionne
+  if((x>allowed_limit)||(y>allowed_limit) || (x<-allowed_limit)||(y<-allowed_limit) || PVector.dist(c1, sphereLocation) <= cylinderBaseSize + sphereRadius) {
+    return false;
+  }
+for(Cylinder c : particles.keySet()) {
+  float[] point = particles.get(c);
+  if(!checkOverlap(center, new PVector(point[0], point[1]))) {
+    return false;
+  }
+}
+return true;
+}
+
+// Check if a particle with center c1
+// and another particle with center c2 overlap.
+boolean checkOverlap(PVector c1, PVector c2) {
+return PVector.dist(c1, c2) >= 2*cylinderBaseSize;
+}
+
+void run() {
+  Cylinder c = checkCylinderCollision();
+  if(c != null) {
+    particles.remove(c);  
+  }
+}
 }
