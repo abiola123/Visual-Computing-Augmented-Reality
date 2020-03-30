@@ -416,6 +416,9 @@ return PVector.dist(c1, c2) >= 2*cylinderBaseSize;
 void run() {
   Cylinder c = checkCylinderCollision();
   if(c != null) {
+    if(particles.get(c)[0] == origin.x && particles.get(c)[1] == origin.y) {
+      initialized = false;
+    }
     particles.remove(c);  
   }
 }
