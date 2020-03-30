@@ -1,3 +1,16 @@
+  /*topView.background(0,120,150);
+  topView.fill(255,0,0);
+  topView.ellipse(50, 50, 50, 50);
+  topView = createGraphics(110,110);
+  topView.ellipse(50, 50, 50, 50);
+  image(topView, 0, 400);*/
+PGraphics gameSurface;
+PGraphics background;
+PGraphics topView;
+PGraphics scorePanel;
+
+float total_score = 0;
+float last_score = 0;
 float theta = 0;
 float phi = 0;
 float constant = 0.02;
@@ -29,71 +42,130 @@ size(500, 500, P3D);
 
 
 void setup() {
-noStroke();
+//gameSurface.noStroke();
 vilain = loadShape("robotnik.obj");
+gameSurface = createGraphics(width,height-100,P3D);
+background = createGraphics(width,100);
+topView = createGraphics(100,100);
+scorePanel = createGraphics(90,90);
 }
 
+void drawBackGround() { 
+  background.beginDraw();
+  background.background(200,200,200);
+  background.endDraw();
 
+}
 
+void drawScorePanel() {
+  scorePanel.beginDraw();
+  scorePanel.background(170,170,170);
+  
+  scorePanel.fill(0,0,0);
+  scorePanel.textSize(10);
+  scorePanel.text("Total score:",5,10);
+  scorePanel.text(total_score,5,22);
+  
+  
+  scorePanel.text("Velocity:",5,40);
+  scorePanel.text((float)Math.sqrt(velocity.dot(velocity)),5,52);
+  
+  scorePanel.text("Last Score:",5,70);
+  scorePanel.text(last_score,5,82);
+  
+  scorePanel.endDraw();
 
+}
 
+void drawTopView() {
+  topView.beginDraw();
+  topView.background(0,130,170);
+  
+  if(initialized) {
+    for(Cylinder c : system.particles.keySet()) {
+     float[] f = system.particles.get(c);
+     if(f[0] == system.origin.x && f[1] == system.origin.y) {
+       topView.fill(255,0,0);
+       topView.ellipse(50 + f[0]/2, 50 + f[1]/2, cylinderBaseSize, cylinderBaseSize);
+     }
+     else {
+     topView.fill(255,255,255);
+     topView.ellipse(50 + f[0]/2, 50 + f[1]/2, cylinderBaseSize, cylinderBaseSize);
+     }
+    }
+    
+  }
+   //topView.fill(255,0,0);
+   //topView.ellipse(50 + sphereLocation.x/2, 50 -sphereLocation.z/2, sphereRadius+3, sphereRadius+3);
+   topView.fill(0,0,255);
+   topView.ellipse(50 + sphereLocation.x/2,50 -sphereLocation.z/2, sphereRadius, sphereRadius);
+  //topView.ellipse(50,50,20,20);
+  topView.endDraw();
+}
 
-
-
-
-void draw() {
+void drawGame() {
+  gameSurface.beginDraw();
+    gameSurface.noStroke();
   Cylinder c = new Cylinder();
-  background(255, 255, 255);
-  camera(width/2, height/2, 450, 250, 250, 0, 0, 1, 0);
+  
+  gameSurface.background(255, 255, 255);
+  //gameSurface.camera(width/2, height/2, 450, 250, 250, 0, 0, 1, 0);
   double y_degrees = degrees(theta);
   double x_degrees = degrees(phi);
-  textSize(20);
-  fill(255, 0, 0);
-  text("X-rotation: " + x_degrees, 10, 30);
-  fill(0,255, 0);
-  text("Y-rotation: " + y_degrees, 10, 50);
-  fill(0,0,255);
-  text("Speed: " + constant, 10, 70);
-  pushMatrix();
-  translate(height/2, width/2, 0);
-
+  gameSurface.pushStyle();
+  gameSurface.textSize(20);
+  gameSurface.fill(255, 0, 0);
+  gameSurface.text("X-rotation: " + x_degrees, 10, 30);
+  gameSurface.fill(0,255, 0);
+  gameSurface.text("Y-rotation: " + y_degrees, 10, 50);
+  
+  gameSurface.fill(0,0,255);
+  gameSurface.text("Speed: " + constant, 10, 70);
+  gameSurface.pushMatrix();
+  gameSurface.translate(height/2, width/2, 0);
+  gameSurface.popStyle();
+  
   if(!mode_shift) {
-    rotateX(phi);
-    rotateZ(theta);
+    gameSurface.rotateX(phi);
+    gameSurface.rotateZ(theta);
   } else {
-    rotateX(-PI/2);
+    gameSurface.rotateX(-PI/2);
   }
 
-   stroke(0,255,0);
-   line(0,-width/4,0,0,width/4,0);
-   stroke(255,0,0);
-   line(-height/3,0,0,height/3,0,0);
-   stroke(0,0,255);
-   line(0,0,-width/3,0,0,width/3);
-    fill(150, 150, 150);
-   box(boxSize, 10, boxSize);
+   gameSurface.stroke(0,255,0);
+   gameSurface.line(0,-width/4,0,0,width/4,0);
+   gameSurface.stroke(255,0,0);
+   gameSurface.line(-height/3,0,0,height/3,0,0);
+   gameSurface.stroke(0,0,255);
+   gameSurface.line(0,0,-width/3,0,0,width/3);
+   gameSurface.fill(150, 150, 150);
+   gameSurface.box(boxSize, 10, boxSize);
 
 
    if(initialized) {
      if(frameCount%50==0 && !mode_shift){
      system.addParticle();
      }
-     pushMatrix();
-     rotateX(PI/2);
-     translate(system.origin.x, system.origin.y);
-     rotateX(PI/2);
-     rotateY(PI);
-     shape(vilain, 0, 0, 100, 100);
-     popMatrix();
+     gameSurface.pushMatrix();
+     gameSurface.rotateX(PI/2);
+     gameSurface.translate(system.origin.x, system.origin.y);
+     gameSurface.rotateX(PI/2);
+     gameSurface.rotateY(PI);
+     gameSurface.shape(vilain, 0, 0, 100, 100);
+     gameSurface.popMatrix();
      for(Cylinder d : system.particles.keySet()) {
      float[] f = system.particles.get(d);
-     pushMatrix();
-     rotateX(PI/2);
-     translate(f[0],f[1],0);
+     gameSurface.pushMatrix();
+     gameSurface.rotateX(PI/2);
+     gameSurface.translate(f[0],f[1],0);
+     
      for(int i = 0 ; i<c.arguments.length;i++) {
-        shape(d.arguments[i]);
+        gameSurface.pushStyle();
+   
+        gameSurface.shape(d.arguments[i]);
+        gameSurface.popStyle();
      }
-     popMatrix();
+     gameSurface.popMatrix();
    }
    system.run();
    //pushMatrix();
@@ -105,20 +177,37 @@ void draw() {
 
    updateSphere();
 
-   popMatrix();
+   gameSurface.popMatrix();
 
-   pushMatrix();
-   translate(mouseX, mouseY, 0);
+   gameSurface.pushMatrix();
+   gameSurface.translate(mouseX, mouseY, 0);
    if(mode_shift) {
       for(int i = 0 ; i<c.arguments.length;i++) {
       //fill(150,150,150);
-      shape(c.arguments[i]);
+      gameSurface.shape(c.arguments[i]);
       }
    }
 
-   popMatrix();
+   gameSurface.popMatrix();
+   gameSurface.endDraw();
+
+}
 
 
+
+
+
+
+
+void draw() {
+  drawGame();  
+  image(gameSurface,0,0);
+  drawBackGround();
+  image(background,0,height -100);
+  drawTopView();
+  image(topView, 0, height - 100);
+  drawScorePanel();
+  image(scorePanel,120,height-90);
 }
 
 
@@ -146,7 +235,7 @@ void addCylinder() {
 
   //compute distance with every cylinder and check if there is going to be an overlapping  
   /*for(float[] f : cylinders.values()) {
-    float distance = (float)Math.sqrt((x-f[0])*(x-f[0]) + (y-f[1])*(y-f[1]));
+    float distance = (float)Math.sqrt((x-f[0])(x-f[0]) + (y-f[1])(y-f[1]));
     if(distance<2*cylinderBaseSize) placable = false;  
   }  */
 
@@ -216,7 +305,7 @@ void mouseWheel(MouseEvent event) {
 }
 
 void updateSphere() {
-
+ gameSurface.pushStyle();
 gravityForce.x = sin(theta) * gravityConstant;
 gravityForce.z = sin(phi) * gravityConstant;
 
@@ -234,10 +323,12 @@ acceleration.add(friction);
 velocity.add(acceleration);
 sphereLocation.add(velocity);
 }
-translate(sphereLocation.x, -15 - sphereLocation.y, -sphereLocation.z);
-sphere(10);
-fill(255, 0, 0);
+gameSurface.translate(sphereLocation.x, -15 - sphereLocation.y, -sphereLocation.z);
+gameSurface.sphere(10);
+gameSurface.fill(255, 0, 0);
 checkEdges();
+
+ gameSurface.popStyle();
 
 
 }
@@ -260,6 +351,17 @@ else if (sphereLocation.z < -100+sphereRadius) {
           velocity.z = velocity.z * -1;
         }
 
+}
+
+void decraseScore() {
+  total_score -= 10;
+  last_score = -10;
+}
+
+void increaseScore() {
+  last_score = (float)(5 * Math.sqrt(velocity.dot(velocity)));
+  total_score += last_score;
+  
 }
 
 void keyPressed() {
@@ -322,6 +424,7 @@ public class Cylinder {
     openCylinder.vertex(x[i], y[i], cylinderHeight);
   }
   openCylinder.endShape();
+  
 
   cover = createShape();
   cover.beginShape(TRIANGLE_FAN);
@@ -343,7 +446,10 @@ public class Cylinder {
   arguments[0] = openCylinder;
   arguments[1] = bottom;
   arguments[2] = cover;
+  
+  
   }
+ 
 
 }
 
@@ -377,6 +483,7 @@ center.y += cos(angle) * 2*cylinderBaseSize;
 if(checkPosition(center)) {
   float[] tab = {center.x, center.y};
 particles.put(new Cylinder(), tab);
+decraseScore();
 break;
 }
 }
@@ -420,6 +527,7 @@ void run() {
       initialized = false;
     }
     else {
+    increaseScore();
     particles.remove(c);  
     }  
 }
