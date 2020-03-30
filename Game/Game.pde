@@ -419,7 +419,9 @@ void run() {
     if(particles.get(c)[0] == origin.x && particles.get(c)[1] == origin.y) {
       initialized = false;
     }
+    else {
     particles.remove(c);  
-  }
+    }  
+}
 }
 }
