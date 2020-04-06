@@ -1,10 +1,11 @@
- 
+
  
 PGraphics gameSurface;
 PGraphics background;
 PGraphics topView;
 PGraphics scorePanel;
-PGraphics barChart; 
+PGraphics barChart;
+HScrollbar scrolbar = new HScrollbar(220, 485, 275, 13);
 
 
 float total_score = 0;
@@ -24,6 +25,10 @@ boolean mode_shift = false;
 boolean initialized = false;
 PShape vilain;
 ParticleSystem system;
+ArrayList<Integer> squares = new ArrayList();
+float squareSize = 2.5;
+float max_score = 0;
+float unit = 0;
 
  private final float cylinderBaseSize = 15;
 
@@ -46,9 +51,38 @@ scorePanel = createGraphics(90,90);
 barChart = createGraphics(275,85);
 }
 
+void drawScrollBar() {
+  scrolbar.update();
+  scrolbar.display();
+  squareSize = scrolbar.getPos() * 10;
+}
+
 void drawBarChart() {
   barChart.beginDraw();
   barChart.background(255,255,255);
+  if(frameCount%50==0) { 
+  squares.add((int) total_score);
+  float score = abs(total_score);
+  if(score > max_score) {
+    
+    max_score = score;
+    unit = 38/score;
+  }
+  }
+  int count = 0;
+  for(Integer s: squares) {
+    int negative = -1;
+    int value = s;
+    if(s < 0) {
+      negative = 1;
+      value = -s;
+    }
+    for(int i = 0; i < value; ++i) {
+    barChart.fill(0,0,255);
+    barChart.rect(count * squareSize, negative * i * unit + 85/2, squareSize, unit);    
+    }
+    ++count;
+  }
   
   // scorePanel.fill(0,0,0);  
   barChart.endDraw();
@@ -166,7 +200,6 @@ void drawGame() {
      
      for(int i = 0 ; i<c.arguments.length;i++) {
         gameSurface.pushStyle();
-   
         gameSurface.shape(d.arguments[i]);
         gameSurface.popStyle();
      }
@@ -213,8 +246,11 @@ void draw() {
   image(topView, 0, height - 100);
   drawScorePanel();
   image(scorePanel,120,height-90);
-  image(barChart, 220, height- 90 );
+  image(barChart, 220, height- 98 );
   drawBarChart();
+  drawScrollBar();
+
+  
 }
 
 
@@ -253,6 +289,10 @@ void addCylinder() {
 
   if(placable) {
    system = new ParticleSystem(new PVector(x,y));
+   squares = new ArrayList<Integer>();
+   total_score =0;
+   last_score = 0;
+   max_score = 0;
    initialized = true;
   } else { System.out.println("not placable"); }
 }
@@ -260,6 +300,7 @@ void addCylinder() {
 
 void mouseDragged() 
 {
+  if(!scrolbar.locked) {
   if(pmouseX - mouseX < 0) {
      float newValue = theta;
      newValue += constant;
@@ -292,6 +333,7 @@ void mouseDragged()
      newValue = PI/3;
     }
     phi = newValue;
+  }
   }
  }
 
