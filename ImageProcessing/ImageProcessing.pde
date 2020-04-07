@@ -1,18 +1,20 @@
 PImage img;
-HScrollbar thresholdBar;
+//HScrollbar thresholdBar;
 HScrollbar upperBoundBar;
 HScrollbar lowerBoundBar;
 private float lowerBound;
 private float upperBound;
-private double treshold;
+//private double treshold;
 
 
 void settings() {
 size(1600, 600);
 }
 void setup() {  
-img = loadImage("board1.jpg");
-thresholdBar = new HScrollbar(0, 580, 800, 20);
+img = loadImage("nao.jpg");
+//thresholdBar = new HScrollbar(0, 580, 800, 20);
+upperBoundBar = new HScrollbar(0, 540, 800, 20);
+lowerBoundBar = new HScrollbar(0, 580, 800, 20);
 
 //noLoop(); // no interactive behaviour: draw() will be called only once.
 }
@@ -30,9 +32,15 @@ void draw() {
 lowerBound = 255*lowerBoundBar.getPos();
 upperBound = 255*upperBoundBar.getPos();
 image(transformToHueMap(img,lowerBound,upperBound), 0, 0);
-thresholdBar.display();
-thresholdBar.update();
-println(thresholdBar.getPos()); // getPos() returns a value between 0 and 1
+
+lowerBoundBar.display();
+lowerBoundBar.update();
+pushMatrix();
+upperBoundBar.display();
+upperBoundBar.update();
+popMatrix();
+
+//println(thresholdBar.getPos()); // getPos() returns a value between 0 and 1
 
 }
 
@@ -56,7 +64,7 @@ PImage result = createImage(img.width, img.height, RGB);
 for(int i = 0 ; i<img.width*img.height;i++) {
     float hue = hue(img.pixels[i]);
     if(hue>=lowerBound && hue<=upperBound) {
-    result.pixels[i] = img.pixels[k];
+    result.pixels[i] = img.pixels[i];
     }else {
     result.pixels[i] = color(0,0,0);
     }
