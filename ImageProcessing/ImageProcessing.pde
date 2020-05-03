@@ -30,11 +30,20 @@ void draw() {
 
 //image(convolute(img),0,0);
 
-image(convolute(img),0,0);
+//image(convolute(img),0,0);
 
-image(gaussianBlur(img),0,0);
+//image(gaussianBlur(img),0,0);
+BlobDetection blob = new BlobDetection();
+PImage res;
+res = transformToHueMap(img,110,135);
+res = threshold(res, 1);
+res = blob.findConnectedComponents(res,true);
+//res = gaussianBlur(res);
+res = scharr(res);
+image(res,0,0);
 
 }
+
 
 PImage threshold(PImage img, int threshold){
 // create a new, initially transparent, 'result' image
