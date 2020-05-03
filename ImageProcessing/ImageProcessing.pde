@@ -29,7 +29,11 @@ void draw() {
 
 
 //image(convolute(img),0,0);
+<<<<<<< HEAD
 image(convolute(img),0,0);
+=======
+image(gaussianBlur(img),0,0);
+>>>>>>> 705602ba0e9b4604bdf9fbb681df09d2629f80f2
 }
 
 PImage threshold(PImage img, int threshold){
