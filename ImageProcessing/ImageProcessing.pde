@@ -29,11 +29,11 @@ void draw() {
 
 
 //image(convolute(img),0,0);
-<<<<<<< HEAD
+
 image(convolute(img),0,0);
-=======
+
 image(gaussianBlur(img),0,0);
->>>>>>> 705602ba0e9b4604bdf9fbb681df09d2629f80f2
+
 }
 
 PImage threshold(PImage img, int threshold){
@@ -195,16 +195,16 @@ result.updatePixels();
 return result;
 }
 
-   PImage houghImg = createImage(rDim, phiDim, ALPHA);
+   //PImage houghImg = createImage(rDim, phiDim, ALPHA);
    
    
-for (int i = 0; i < accumulator.length; i++) {
+/*for (int i = 0; i < accumulator.length; i++) {
         houghImg.pixels[i] = color(min(255, accumulator[i]));
     }
     // You may want to resize the accumulator to make it easier to see:
     // houghImg.resize(400, 400);
-    houghImg.updatePixels();
-}
+    houghImg.updatePixels();*/
+
 
 List<PVector> hough(PImage edgeImg) {
 //***************************
