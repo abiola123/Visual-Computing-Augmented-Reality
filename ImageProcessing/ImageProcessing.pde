@@ -1,4 +1,5 @@
 PImage img;
+PImage img1;
 private float lowerBound;
 private float upperBound;
 private double treshold;
@@ -9,6 +10,7 @@ size(1600, 600);
 }
 void setup() {  
 img = loadImage("board1.jpg");
+img1 = loadImage("hough_test.bmp");
 
 //noLoop(); // no interactive behaviour: draw() will be called only once.
 }
@@ -33,14 +35,17 @@ void draw() {
 //image(convolute(img),0,0);
 
 //image(gaussianBlur(img),0,0);
-BlobDetection blob = new BlobDetection();
+/*BlobDetection blob = new BlobDetection();
 PImage res;
 res = transformToHueMap(img,110,135);
 res = threshold(res, 1);
 res = blob.findConnectedComponents(res,true);
 //res = gaussianBlur(res);
 res = scharr(res);
-image(res,0,0);
+image(res,0,0);*/
+//image(img1,0,0);
+//plot_lines(hough(img1), img1);
+hough(img1);
 
 }
 
@@ -274,6 +279,57 @@ float phi = accPhi * discretizationStepsPhi;
 lines.add(new PVector(r,phi));
 }
 }
-
+PImage houghImg = createImage(rDim, phiDim, ALPHA);
+for (int i = 0; i < accumulator.length; i++) {
+houghImg.pixels[i] = color(min(255, accumulator[i]));
+}
+// You may want to resize the accumulator to make it easier to see:
+houghImg.resize(400, 400);
+houghImg.updatePixels();
+image(houghImg,0,0);
+//plot_lines(lines, houghImg);
 return lines;
+}
+
+void plot_lines(List<PVector> lines, PImage edgeImg) {
+  for (int idx = 0; idx < lines.size(); idx++) {
+PVector line=lines.get(idx);
+float r = line.x;
+float phi = line.y;
+// Cartesian equation of a line: y = ax + b
+// in polar, y = (-cos(phi)/sin(phi))x + (r/sin(phi))
+// => y = 0 : x = r / cos(phi)
+// => x = 0 : y = r / sin(phi)
+// compute the intersection of this line with the 4 borders of
+// the image
+int x0 = 0;
+int y0 = (int) (r / sin(phi));
+int x1 = (int) (r / cos(phi));
+int y1 = 0;
+int x2 = edgeImg.width;
+int y2 = (int) (-cos(phi) / sin(phi) * x2 + r / sin(phi));
+int y3 = edgeImg.width;
+int x3 = (int) (-(y3 - r / sin(phi)) * (sin(phi) / cos(phi)));
+// Finally, plot the lines
+stroke(204,102,0);
+if (y0 > 0) {
+if (x1 > 0)
+line(x0, y0, x1, y1);
+else if (y2 > 0)
+line(x0, y0, x2, y2);
+else
+line(x0, y0, x3, y3);
+}
+else {
+if (x1 > 0) {
+if (y2 > 0)
+line(x1, y1, x2, y2);
+else
+line(x1, y1, x3, y3);
+}
+else
+line(x2, y2, x3, y3);
+}
+}
+
 }
