@@ -252,12 +252,11 @@ for (int y = 0; y < edgeImg.height; y++) {
 for (int x = 0; x < edgeImg.width; x++) {
 // Are we on an edge?
 if (brightness(edgeImg.pixels[y * edgeImg.width + x]) != 0) {
-  for(float phi = 0; phi < PI; phi += discretizationStepsPhi) {
-    float r = x * cos(phi) + y * sin(phi);
-    if(r < 0) {
-      r +=  rDim / 2;
-    }
-    accumulator[(int) (phi * rDim + r)] += 1;//x · cos(ϕ) + y · sin(ϕ)
+  float angle = 0;
+  for(float phi = 0; phi < phiDim; phi ++, angle +=discretizationStepsPhi ) {
+    float r = x * cos(angle) + y * sin(angle);
+    int index = (int) (r/discretizationStepsR + rDim/2);
+    accumulator[(int) (phi * rDim + index)] += 1;//x · cos(ϕ) + y · sin(ϕ)
 
   }
 // ...determine here all the lines (r, phi) passing through
