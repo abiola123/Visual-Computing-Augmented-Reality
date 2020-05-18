@@ -48,7 +48,7 @@ background = createGraphics(width,100);
 topView = createGraphics(100,100);
 scorePanel = createGraphics(90,90);
 barChart = createGraphics(275,85);
-
+System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 imgproc = new ImageProcessing();
 String []args = {"Image processing window"};
 PApplet.runSketch(args, imgproc);
@@ -443,8 +443,8 @@ void settings() {
 size(1600, 600);
 }
 void setup() {  
-img = loadImage("board1.jpg");
-img1 = loadImage("hough_test.bmp");
+//img = loadImage("board1.jpg");
+//img1 = loadImage("hough_test.bmp");
 
 //noLoop(); // no interactive behaviour: draw() will be called only once.
 }
