@@ -1,5 +1,6 @@
 import java.util.Collections;
 ImageProcessing imgproc;
+TwoDThreeD twoDThreeD;
  
  
 PGraphics gameSurface;
@@ -26,6 +27,7 @@ boolean mode_shift = false;
 boolean initialized = false;
 PShape vilain;
 ParticleSystem system;
+PImage img;
 
  private final float cylinderBaseSize = 15;
 
@@ -50,7 +52,8 @@ barChart = createGraphics(275,85);
 imgproc = new ImageProcessing();
 String []args = {"Image processing window"};
 PApplet.runSketch(args, imgproc);
-
+img = loadImage("board1.jpg");
+twoDThreeD = new TwoDThreeD(img.width, img.height, 0);
 }
 
 void drawBarChart() {
@@ -60,7 +63,7 @@ void drawBarChart() {
   // scorePanel.fill(0,0,0);  
   barChart.endDraw();
   
-  PVector rot = imgproc.getRotation(getHomogenous(qauds));
+  
 // where getRotation could be a getter for the rotation angles you computed previously
 
 }
@@ -215,7 +218,7 @@ void drawGame() {
 
 
 void draw() {
-  drawGame();  
+  /*drawGame();  
   image(gameSurface,0,0);
   drawBackGround();
   image(background,0,height -100);
@@ -224,9 +227,19 @@ void draw() {
   drawScorePanel();
   image(scorePanel,120,height-90);
   image(barChart, 220, height- 90 );
-  drawBarChart();
+  drawBarChart();*/
+  PVector rot = twoDThreeD.get3DRotations(getHomogenous(imgproc.quadDetection(img)));
+  println(rot);
 }
 
+List<PVector> getHomogenous(List<PVector> list) {
+  List<PVector> newList = new ArrayList<PVector>();
+  for(PVector p : list) {
+    newList.add(new PVector(p.x, p.y, 1));
+  }
+  return newList;
+}
+ 
 
 void mouseClicked(){
   if(mode_shift) {
@@ -456,7 +469,7 @@ void draw() {
 //image(convolute(img),0,0);
 
 //image(gaussianBlur(img),0,0);
-BlobDetection blob = new BlobDetection();
+/*BlobDetection blob = new BlobDetection();
 PImage res;
 res = transformToHueMap(img,lowerBound,upperBound);
 res = threshold(res, treshold);
@@ -481,9 +494,21 @@ for(PVector p : quads) {
 //ellipse(50,50,100,100);
 //hough(img1);
 //println(new QuadGraph().findBestQuad(lines, img.width, img.height, 5000, 0, false).size());
-
+*/
 }
 
+List<PVector> quadDetection(PImage img) {
+  BlobDetection blob = new BlobDetection();
+PImage res;
+res = transformToHueMap(img,lowerBound,upperBound);
+res = threshold(res, treshold);
+//PImage blobDetec = blob.findConnectedComponents(res,true);
+res = blob.findConnectedComponents(res,true);
+res = gaussianBlur(res);
+res = scharr(res);
+List<PVector> lines = hough(res, 10);
+return new QuadGraph().findBestQuad(lines, img.width, img.height, img.width * img.height, img.width * img.height / 10, false);
+}
 
 PImage threshold(PImage img, int threshold){
 // create a new, initially transparent, 'result' image
