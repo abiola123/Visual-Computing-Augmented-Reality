@@ -49,13 +49,14 @@ image(res, img.width, 0);
 image(img,0,0);
 
 //image(img1,0,0);
-List<PVector> lines = hough(res, 6);
+List<PVector> lines = hough(res, 10);
 plot_lines(lines, res);
 List<PVector> quads = new QuadGraph().findBestQuad(lines, img.width, img.height, img.width * img.height, img.width * img.height / 10, false);
 for(PVector p : quads) {
   //fill(0);
   println("(x,y) = " + p.x + "," + p.y);
-  ellipse(p.x,p.y,20,20);
+  fill(0);
+  circle(p.x,p.y,20);
 }
 //ellipse(50,50,100,100);
 //hough(img1);
@@ -241,7 +242,7 @@ List<PVector> hough(PImage edgeImg, int nLines) {
 //** TRY TO TUNE ME! *****
 //*********
 //...............,´¯`,
-float discretizationStepsPhi = 0.06f; //.........,´¯`,..../
+float discretizationStepsPhi = 0.01f; //.........,´¯`,..../
 float discretizationStepsR = 1.5f; //....../¯/.../..../
 int minVotes=50; //..../../.../..../..,-----,
 //../../.../....//´...........`.
