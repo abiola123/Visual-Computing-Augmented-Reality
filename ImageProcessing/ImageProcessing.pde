@@ -1,8 +1,10 @@
+import java.util.Collections;
 PImage img;
 PImage img1;
-private float lowerBound;
-private float upperBound;
-private double treshold;
+private float lowerBound = 110;
+private float upperBound = 135;
+private int treshold = 1;
+final int regionLength = 10;
 final int N = 3;
 
 void settings() {
@@ -35,17 +37,30 @@ void draw() {
 //image(convolute(img),0,0);
 
 //image(gaussianBlur(img),0,0);
-/*BlobDetection blob = new BlobDetection();
+BlobDetection blob = new BlobDetection();
 PImage res;
-res = transformToHueMap(img,110,135);
-res = threshold(res, 1);
+res = transformToHueMap(img,lowerBound,upperBound);
+res = threshold(res, treshold);
+
 res = blob.findConnectedComponents(res,true);
-//res = gaussianBlur(res);
+res = gaussianBlur(res);
 res = scharr(res);
-image(res,0,0);*/
+image(res, img.width, 0);
+image(img,0,0);
+
 //image(img1,0,0);
-//plot_lines(hough(img1), img1);
-hough(img1);
+List<PVector> lines = hough(res, 10);
+plot_lines(lines, res);
+List<PVector> quads = new QuadGraph().findBestQuad(lines, img.width, img.height, img.width * img.height, img.width * img.height / 10, false);
+for(PVector p : quads) {
+  //fill(0);
+  println("(x,y) = " + p.x + "," + p.y);
+  fill(0);
+  circle(p.x,p.y,20);
+}
+//ellipse(50,50,100,100);
+//hough(img1);
+//println(new QuadGraph().findBestQuad(lines, img.width, img.height, 5000, 0, false).size());
 
 }
 
@@ -220,15 +235,15 @@ return result;
     houghImg.updatePixels();*/
 
 
-List<PVector> hough(PImage edgeImg) {
-//***************************
-//**** TRY TO TUNE ME! *************
-//**** TRY TO TUNE ME! *************
-//**** TRY TO TUNE ME! *************
-//***************************
+List<PVector> hough(PImage edgeImg, int nLines) {
+//*********
+//** TRY TO TUNE ME! *****
+//** TRY TO TUNE ME! *****
+//** TRY TO TUNE ME! *****
+//*********
 //...............,´¯`,
-float discretizationStepsPhi = 0.06f; //.........,´¯`,..../
-float discretizationStepsR = 2.5f; //....../¯/.../..../
+float discretizationStepsPhi = 0.01f; //.........,´¯`,..../
+float discretizationStepsR = 1.5f; //....../¯/.../..../
 int minVotes=50; //..../../.../..../..,-----,
 //../../.../....//´...........`.
 //./../.../..../......../´¯\....\
@@ -253,10 +268,10 @@ for (int x = 0; x < edgeImg.width; x++) {
 // Are we on an edge?
 if (brightness(edgeImg.pixels[y * edgeImg.width + x]) != 0) {
   float angle = 0;
-  for(float phi = 0; phi < phiDim; phi ++, angle +=discretizationStepsPhi ) {
+  for(int phi = 0; phi < phiDim; phi ++, angle +=discretizationStepsPhi ) {
     float r = x * cos(angle) + y * sin(angle);
     int index = (int) (r/discretizationStepsR + rDim/2);
-    accumulator[(int) (phi * rDim + index)] += 1;//x · cos(ϕ) + y · sin(ϕ)
+    accumulator[ phi * rDim + index] += 1;//x · cos(ϕ) + y · sin(ϕ)
 
   }
 // ...determine here all the lines (r, phi) passing through
@@ -268,16 +283,48 @@ if (brightness(edgeImg.pixels[y * edgeImg.width + x]) != 0) {
 }
 }
 ArrayList<PVector> lines=new ArrayList<PVector>();
+ArrayList<Integer> bestCandidates = new ArrayList<Integer>();
 for (int idx = 0; idx < accumulator.length; idx++) {
 if (accumulator[idx] > minVotes) {
 // first, compute back the (r, phi) polar coordinates:
+boolean biggest = true;
+
+int lower_bound = ((idx - regionLength/2) % rDim > idx % rDim) ? idx : max(idx - regionLength/2,0);
+int upper_bound = (((idx + regionLength/2) % rDim < idx % rDim) ? idx : min(idx + regionLength/2,accumulator.length)); //conditions sur les bordures pour séléctionner les voisins de la ligne
+boolean top = idx - lower_bound - rDim >= 0; //conditions sur les lignes d'au dessus et d'en dessous
+boolean bottom = idx + rDim + upper_bound < accumulator.length; 
+
+for(int i = lower_bound; i < upper_bound && biggest; ++i) { 
+ biggest = biggest && accumulator[idx] >= accumulator[i];
+ if(top) {
+  biggest = biggest &&  accumulator[idx] >= accumulator[i - rDim];
+ }
+ if(bottom) {
+   biggest = biggest &&  accumulator[idx] >= accumulator[i + rDim];
+ }
+}
+if(biggest) {
+bestCandidates.add(idx);
+}
+
+/*// first, compute back the (r, phi) polar coordinates:
+int accPhi = (int) (idx / (rDim));
+int accR = idx - (accPhi) * (rDim);
+float r = (accR - (rDim) * 0.5f) * discretizationStepsR;
+float phi = accPhi * discretizationStepsPhi;
+lines.add(new PVector(r,phi));*/
+}
+}
+Collections.sort(bestCandidates, new HoughComparator(accumulator));
+for(int i = 0; i < min(nLines,bestCandidates.size()); ++i) {
+int idx = bestCandidates.get(i);
 int accPhi = (int) (idx / (rDim));
 int accR = idx - (accPhi) * (rDim);
 float r = (accR - (rDim) * 0.5f) * discretizationStepsR;
 float phi = accPhi * discretizationStepsPhi;
 lines.add(new PVector(r,phi));
 }
-}
+
 PImage houghImg = createImage(rDim, phiDim, ALPHA);
 for (int i = 0; i < accumulator.length; i++) {
 houghImg.pixels[i] = color(min(255, accumulator[i]));
@@ -285,7 +332,7 @@ houghImg.pixels[i] = color(min(255, accumulator[i]));
 // You may want to resize the accumulator to make it easier to see:
 houghImg.resize(400, 400);
 houghImg.updatePixels();
-image(houghImg,0,0);
+//image(houghImg,0,0);
 //plot_lines(lines, houghImg);
 return lines;
 }
