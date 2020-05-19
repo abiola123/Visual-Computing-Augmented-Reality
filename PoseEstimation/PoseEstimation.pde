@@ -229,7 +229,10 @@ void draw() {
   image(barChart, 220, height- 90 );
   drawBarChart();*/
   PVector rot = twoDThreeD.get3DRotations(getHomogenous(imgproc.quadDetection(img)));
-  println(rot);
+  for(int i = 0 ;i<3; i++) {
+    println(rot.array()[i]*180/PI);
+  }
+  
 }
 
 List<PVector> getHomogenous(List<PVector> list) {
