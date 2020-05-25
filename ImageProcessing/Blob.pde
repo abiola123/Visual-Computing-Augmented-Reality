@@ -84,9 +84,24 @@ for(int x = 0; x < input.width; ++x) {
   }
   }
 }
+/*for(int j = 0; j < labelsEquivalences.length; ++j) {
+  labelsEquivalences.get(labels[j] - 1).first();
+}*/
 //println(labels);
 }
+println(labelsEquivalences);
 
+for(int j = 0; j < labelsEquivalences.size()-1; ++j) {
+  for(int i : labelsEquivalences.get(j)) {
+      for(int k = 0; k< labelsEquivalences.size()-1; ++k) {
+            if(labelsEquivalences.get(k).contains(i)) {
+            labelsEquivalences.get(k).addAll(labelsEquivalences.get(j));
+            }
+      }
+  }
+}
+
+println("after" + labelsEquivalences);
 
 // Second pass: re-label the pixels by their equivalent class
 for(int j = 0; j < labels.length; ++j) {
@@ -117,9 +132,12 @@ if(!onlyBiggest) {
   color[] colors = new color[labelsEquivalences.size()];
   
   for(int j = 0; j < colors.length; ++j) {colors[j] = color(int(random(256)),int(random(256)),int(random(256)));} //define a color per label
+ //  for(int j = 0; j < colors.length; ++j) {colors[j] = color(int(255),int(255),int(255));} //define a color per label
+
    
    for(int j = 0; j < labels.length; ++j) {
      if(labels[j] != 0) {input.pixels[j] = colors[labels[j] - 1];}
+    
    }
 } else {// if onlyBiggest==true, output an image with the biggest blob in white and others in black
   for(int j = 0; j < labels.length; ++j) {

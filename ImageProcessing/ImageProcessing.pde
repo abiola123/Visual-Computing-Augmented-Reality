@@ -1,8 +1,12 @@
 import java.util.Collections;
 PImage img;
 PImage img1;
-private float lowerBound = 105;
-private float upperBound = 135;
+private float lowerBoundHue = 105;
+private float upperBoundHue = 135;
+private float lowerBoundSat = 85;
+private float upperBoundSat = 255;
+private float lowerBoundBright = 37;
+private float upperBoundBright = 255;
 private int treshold = 1;
 final int regionLength = 1000;
 final int N = 3;
@@ -11,7 +15,7 @@ void settings() {
 size(1600, 400);
 }
 void setup() {  
-img = loadImage("board1.jpg");
+img = loadImage("board3.jpg");
 img.resize(img.width*2/3, img.height*2/3);
 img1 = loadImage("hough_test.bmp");
 
@@ -20,28 +24,11 @@ img1 = loadImage("hough_test.bmp");
 
 void draw() {
   
-//black and white thresholding  
-//treshold = 255*thresholdBar.getPos();
-//image(threshold(img,(int)treshold), 0, 0);
-//thresholdBar.display();
-//thresholdBar.update();
-//println(thresholdBar.getPos()); // getPos() returns a value between 0 and 1
 
-//hue map thersholding
-
-
-//println(thresholdBar.getPos()); // getPos() returns a value between 0 and 1
-
-
-//image(convolute(img),0,0);
-
-//image(convolute(img),0,0);
-
-//image(gaussianBlur(img),0,0);
 BlobDetection blob = new BlobDetection();
 PImage res;
 
-res = transformToHueMap(img,lowerBound,upperBound);
+res = transform(img,lowerBoundHue,upperBoundHue,lowerBoundSat,upperBoundSat,lowerBoundBright,upperBoundBright);
 
 res = threshold(res, treshold);
 
@@ -53,7 +40,7 @@ edgeDetec = res;//gaussianBlur(res);
 res = blob.findConnectedComponents(res,true); 
 //image(edge, img.width, 0);
 
-edgeDetec = blob.findConnectedComponents(edgeDetec,true);
+//edgeDetec = blob.findConnectedComponents(edgeDetec,true);
 blobDetec = edgeDetec;
 res = scharr(res);
 edgeDetec = scharr(res);
@@ -93,12 +80,15 @@ for(int i = 0; i < img.width * img.height; i++) {
 return result;
 }
 
-PImage transformToHueMap(PImage img,float lowerBound,float upperBound) {
+PImage transform(PImage img,float lowerBoundHue,float upperBoundHue,float lowerBoundSat,float upperBoundSat,float lowerBoundBright,float upperBoundBright) {
 PImage result = createImage(img.width, img.height, RGB);
 
 for(int i = 0 ; i<img.width*img.height;i++) {
     float hue = hue(img.pixels[i]);
-    if(hue>=lowerBound && hue<=upperBound) {
+    float sat = saturation(img.pixels[i]);
+    float brightness = brightness(img.pixels[i]);
+
+    if(hue>=lowerBoundHue && hue<=upperBoundHue && sat >=lowerBoundSat && sat <= upperBoundSat && brightness >=lowerBoundBright && brightness <=upperBoundBright) {
     result.pixels[i] = img.pixels[i];
     }else {
     result.pixels[i] = color(0,0,0);
