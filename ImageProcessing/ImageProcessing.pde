@@ -1,20 +1,21 @@
 import java.util.Collections;
 PImage img;
 PImage img1;
-private float lowerBound = 110;
+private float lowerBound = 105;
 private float upperBound = 135;
 private int treshold = 1;
-final int regionLength = 10;
+final int regionLength = 1000;
 final int N = 3;
 
 void settings() {
-size(1600, 600);
+size(1600, 400);
 }
 void setup() {  
 img = loadImage("board1.jpg");
+img.resize(img.width*2/3, img.height*2/3);
 img1 = loadImage("hough_test.bmp");
 
-//noLoop(); // no interactive behaviour: draw() will be called only once.
+//noLoop(); // no interactive behaviour: draw() will be called only once. 
 }
 
 void draw() {
@@ -39,13 +40,25 @@ void draw() {
 //image(gaussianBlur(img),0,0);
 BlobDetection blob = new BlobDetection();
 PImage res;
+
 res = transformToHueMap(img,lowerBound,upperBound);
+
 res = threshold(res, treshold);
 
-res = blob.findConnectedComponents(res,true);
-res = gaussianBlur(res);
+//res = gaussianBlur(res);
+PImage edgeDetec;
+PImage blobDetec;
+edgeDetec = res;//gaussianBlur(res);
+
+res = blob.findConnectedComponents(res,true); 
+//image(edge, img.width, 0);
+
+edgeDetec = blob.findConnectedComponents(edgeDetec,true);
+blobDetec = edgeDetec;
 res = scharr(res);
-image(res, img.width, 0);
+edgeDetec = scharr(res);
+//res = threshold(res, treshold);
+
 image(img,0,0);
 
 //image(img1,0,0);
@@ -61,7 +74,8 @@ for(PVector p : quads) {
 //ellipse(50,50,100,100);
 //hough(img1);
 //println(new QuadGraph().findBestQuad(lines, img.width, img.height, 5000, 0, false).size());
-
+image(edgeDetec, img.width, 0);
+image(blobDetec, img.width * 2, 0);
 }
 
 
@@ -112,7 +126,7 @@ PImage result = createImage(img.width, img.height, ALPHA);
 
 for(int x = 1; x<img.width-1;x++) {
   for(int y = 1; y<img.height-1; y++) {    
-    int n_half = 1; // correspond à int(N/2) avec N =3
+    int n_half = 10; // correspond à int(N/2) avec N =3
     float count= 0;
     for(int i=x-n_half; i<x+n_half; i++) {
       for(int j=y-n_half; j<y+n_half; j++) {
@@ -149,10 +163,10 @@ for (int i = 0; i< img.width * img.height; i++){
   result.pixels[i]= color(0);
 }
   
-
-for(int x = 1; x<img.width-1;x++) {
-  for(int y = 1; y<img.height-1; y++) {    
-    int n_half = 1; // correspond à int(N/2) avec N =3
+int n_half = 1;
+for(int x = n_half; x<img.width-n_half;x++) {
+  for(int y = n_half; y<img.height-n_half; y++) {    
+     // correspond à int(N/2) avec N =3
     float count= 0;
     for(int i=x-n_half; i<=x+n_half; i++) {
       for(int j=y-n_half; j<=y+n_half; j++) {
@@ -236,13 +250,13 @@ return result;
 
 
 List<PVector> hough(PImage edgeImg, int nLines) {
-//*********
-//** TRY TO TUNE ME! *****
-//** TRY TO TUNE ME! *****
-//** TRY TO TUNE ME! *****
-//*********
+//***
+//* TRY TO TUNE ME! **
+//* TRY TO TUNE ME! **
+//* TRY TO TUNE ME! **
+//***
 //...............,´¯`,
-float discretizationStepsPhi = 0.01f; //.........,´¯`,..../
+float discretizationStepsPhi = 0.02f; //.........,´¯`,..../
 float discretizationStepsR = 1.5f; //....../¯/.../..../
 int minVotes=50; //..../../.../..../..,-----,
 //../../.../....//´...........`.
