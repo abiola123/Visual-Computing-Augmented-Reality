@@ -84,12 +84,9 @@ for(int x = 0; x < input.width; ++x) {
   }
   }
 }
-/*for(int j = 0; j < labelsEquivalences.length; ++j) {
-  labelsEquivalences.get(labels[j] - 1).first();
-}*/
-//println(labels);
+
 }
-println(labelsEquivalences);
+
 
 for(int j = 0; j < labelsEquivalences.size()-1; ++j) {
   for(int i : labelsEquivalences.get(j)) {
@@ -101,7 +98,6 @@ for(int j = 0; j < labelsEquivalences.size()-1; ++j) {
   }
 }
 
-println("after" + labelsEquivalences);
 
 // Second pass: re-label the pixels by their equivalent class
 for(int j = 0; j < labels.length; ++j) {
@@ -142,7 +138,7 @@ if(!onlyBiggest) {
 } else {// if onlyBiggest==true, output an image with the biggest blob in white and others in black
   for(int j = 0; j < labels.length; ++j) {
      if(labels[j] != 0) {
-     input.pixels[j] = labels[j] == most_represented_label ? color(255,255,255) : color(0,0,0);
+     input.pixels[j] = labels[j] == most_represented_label ? color(124,252,0) : color(0,0,0);
    }
 }
 }

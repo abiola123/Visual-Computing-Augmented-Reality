@@ -1,7 +1,7 @@
 import java.util.Collections;
 PImage img;
 PImage img1;
-private float lowerBoundHue = 105;
+private float lowerBoundHue = 100;
 private float upperBoundHue = 135;
 private float lowerBoundSat = 85;
 private float upperBoundSat = 255;
@@ -15,7 +15,7 @@ void settings() {
 size(1600, 400);
 }
 void setup() {  
-img = loadImage("board3.jpg");
+img = loadImage("board4.jpg");
 img.resize(img.width*2/3, img.height*2/3);
 img1 = loadImage("hough_test.bmp");
 
@@ -54,7 +54,6 @@ plot_lines(lines, res);
 List<PVector> quads = new QuadGraph().findBestQuad(lines, img.width, img.height, img.width * img.height, img.width * img.height / 10, false);
 for(PVector p : quads) {
   //fill(0);
-  println("(x,y) = " + p.x + "," + p.y);
   fill(0);
   circle(p.x,p.y,20);
 }
