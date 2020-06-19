@@ -1,6 +1,14 @@
+import processing.video.*;
 import java.util.Collections;
+import gab.opencv.*;
+
+/*Capture to Movie in declaring the video class*/
+//Capture cam;
+Movie cam;
+
 ImageProcessing imgproc;
 TwoDThreeD twoDThreeD;
+OpenCV opencv;
  
  
 PGraphics gameSurface;
@@ -21,7 +29,7 @@ PVector velocity = new PVector();
 PVector friction = new PVector();
 PVector acceleration = new PVector();
 PVector sphereLocation = new PVector();
-static final float gravityConstant = 0.1;
+static final float gravityConstant = 2;
 static final float sphereRadius = 10;
 boolean mode_shift = false;
 boolean initialized = false;
@@ -41,6 +49,8 @@ size(500, 500, P3D);
 
 
 void setup() {
+cam = new Movie(this, "C:/Dokumente/EPFL/Semestre_4/InfVisu/PoseEstimation/testvideo.avi");
+cam.loop();
 //gameSurface.noStroke();
 vilain = loadShape("robotnik.obj");
 gameSurface = createGraphics(width,height-100,P3D);
@@ -48,12 +58,15 @@ background = createGraphics(width,100);
 topView = createGraphics(100,100);
 scorePanel = createGraphics(90,90);
 barChart = createGraphics(275,85);
-System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
 imgproc = new ImageProcessing();
 String []args = {"Image processing window"};
 PApplet.runSketch(args, imgproc);
+opencv = new OpenCV(this, 100, 100);
+
 img = loadImage("board1.jpg");
 twoDThreeD = new TwoDThreeD(img.width, img.height, 0);
+
 }
 
 void drawBarChart() {
@@ -194,7 +207,7 @@ void drawGame() {
    }
 
    updateSphere();
-
+    
    gameSurface.popMatrix();
 
    gameSurface.pushMatrix();
@@ -213,12 +226,36 @@ void drawGame() {
 
 
 
-
+float adjustAngle(float angle) {
+  while(angle < - PI/2) {
+    angle += PI;
+  }
+  while(angle > PI/2) {
+    angle -= PI;
+  }
+  return angle;
+}
 
 
 
 void draw() {
-  /*drawGame();  
+  
+  if (cam.available() == true) {
+  cam.read();
+  }
+  img = cam.get();
+  PVector rot = twoDThreeD.get3DRotations(getHomogenous(imgproc.quadDetection(img)));
+  //println(rot);
+  if(!rot.equals(new PVector(0.0,-0.0,0.0))) {
+    
+  phi = adjustAngle(rot.x);
+  theta = adjustAngle(rot.z);
+  }
+  //while(phi < -180) {
+      
+  //}
+  
+  drawGame();  
   image(gameSurface,0,0);
   drawBackGround();
   image(background,0,height -100);
@@ -227,12 +264,10 @@ void draw() {
   drawScorePanel();
   image(scorePanel,120,height-90);
   image(barChart, 220, height- 90 );
-  drawBarChart();*/
-  PVector rot = twoDThreeD.get3DRotations(getHomogenous(imgproc.quadDetection(img)));
-  for(int i = 0 ;i<3; i++) {
-    println(rot.array()[i]*180/PI);
-  }
+  drawBarChart();
+  //println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
   
+  //println(phi * (180/PI) + "," + theta * (180/PI));
 }
 
 List<PVector> getHomogenous(List<PVector> list) {
@@ -357,6 +392,8 @@ velocity.add(acceleration);
 sphereLocation.add(velocity);
 }
 gameSurface.translate(sphereLocation.x, -15 - sphereLocation.y, -sphereLocation.z);
+
+println("X : " + sphereLocation.x + " Y : " + sphereLocation.y);
 gameSurface.sphere(10);
 gameSurface.fill(255, 0, 0);
 checkEdges();
@@ -436,16 +473,31 @@ Cylinder checkCylinderCollision() {
 class ImageProcessing extends PApplet {
 PImage img;
 PImage img1;
-private float lowerBound = 110;
-private float upperBound = 135;
+private float lowerBoundHue = 100;
+private float upperBoundHue = 135;
+private float lowerBoundSat = 85;
+private float upperBoundSat = 255;
+private float lowerBoundBright = 37;
+private float upperBoundBright = 255;
 private int treshold = 1;
-final int regionLength = 10;
+final int regionLength = 1000;
 final int N = 3;
 
+
 void settings() {
-size(1600, 600);
+//size(1600, 600);
 }
 void setup() {  
+  // pre-compute the sin and cos values
+/*float[] tabSin = new float[phiDim];
+float[] tabCos = new float[phiDim];
+float ang = 0;
+float inverseR = 1.f / discretizationStepsR;
+for (int accPhi = 0; accPhi < phiDim; ang += discretizationStepsPhi, accPhi++) {
+// we can also pre-multiply by (1/discretizationStepsR) since we need it in the Hough loop
+tabSin[accPhi] = (float) (Math.sin(ang) * inverseR);
+tabCos[accPhi] = (float) (Math.cos(ang) * inverseR);*/
+
 //img = loadImage("board1.jpg");
 //img1 = loadImage("hough_test.bmp");
 
@@ -453,7 +505,7 @@ void setup() {
 }
 
 void draw() {
-  
+ //image(img,0,0);
 //black and white thresholding  
 //treshold = 255*thresholdBar.getPos();
 //image(threshold(img,(int)treshold), 0, 0);
@@ -501,15 +553,42 @@ for(PVector p : quads) {
 }
 
 List<PVector> quadDetection(PImage img) {
-  BlobDetection blob = new BlobDetection();
+//println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+BlobDetection blob = new BlobDetection();
 PImage res;
-res = transformToHueMap(img,lowerBound,upperBound);
+
+res = transform(img,lowerBoundHue,upperBoundHue,lowerBoundSat,upperBoundSat,lowerBoundBright,upperBoundBright);
+
 res = threshold(res, treshold);
-//PImage blobDetec = blob.findConnectedComponents(res,true);
-res = blob.findConnectedComponents(res,true);
-res = gaussianBlur(res);
+
+//res = gaussianBlur(res);
+//PImage edgeDetec;
+//PImage blobDetec;
+//edgeDetec = res;//gaussianBlur(res);
+
+res = blob.findConnectedComponents(res,true); 
+//image(edge, img.width, 0);
+
+//edgeDetec = blob.findConnectedComponents(edgeDetec,true);
+//blobDetec = edgeDetec;
 res = scharr(res);
-List<PVector> lines = hough(res, 10);
+//edgeDetec = scharr(res);
+//res = threshold(res, treshold);
+
+//image(img,0,0);
+
+//image(img1,0,0);
+//List<PVector> lines = hough(res, 10);
+//plot_lines(lines, res);
+
+List<PVector> lines = hough(res, 7);
+
+//List<PVector> quads = new QuadGraph().findBestQuad(lines, img.width, img.height, img.width * img.height, img.width * img.height / 10, false);
+//println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+//List<PVector> q = new QuadGraph().findBestQuad(lines, img.width, img.height, img.width * img.height, img.width * img.height / 10, false);
+//println("ooooooooooooooooooooooooooooooooooooooooooooooooo");
+//println("ooooooooooooooooooooooooooooooooooooooooooooooooo");
+//return q;
 return new QuadGraph().findBestQuad(lines, img.width, img.height, img.width * img.height, img.width * img.height / 10, false);
 }
 
@@ -527,12 +606,15 @@ for(int i = 0; i < img.width * img.height; i++) {
 return result;
 }
 
-PImage transformToHueMap(PImage img,float lowerBound,float upperBound) {
+PImage transform(PImage img,float lowerBoundHue,float upperBoundHue,float lowerBoundSat,float upperBoundSat,float lowerBoundBright,float upperBoundBright) {
 PImage result = createImage(img.width, img.height, RGB);
 
 for(int i = 0 ; i<img.width*img.height;i++) {
     float hue = hue(img.pixels[i]);
-    if(hue>=lowerBound && hue<=upperBound) {
+    float sat = saturation(img.pixels[i]);
+    float brightness = brightness(img.pixels[i]);
+
+    if(hue>=lowerBoundHue && hue<=upperBoundHue && sat >=lowerBoundSat && sat <= upperBoundSat && brightness >=lowerBoundBright && brightness <=upperBoundBright) {
     result.pixels[i] = img.pixels[i];
     }else {
     result.pixels[i] = color(0,0,0);
@@ -560,7 +642,7 @@ PImage result = createImage(img.width, img.height, ALPHA);
 
 for(int x = 1; x<img.width-1;x++) {
   for(int y = 1; y<img.height-1; y++) {    
-    int n_half = 1; // correspond à int(N/2) avec N =3
+    int n_half = 10; // correspond à int(N/2) avec N =3
     float count= 0;
     for(int i=x-n_half; i<x+n_half; i++) {
       for(int j=y-n_half; j<y+n_half; j++) {
@@ -597,10 +679,10 @@ for (int i = 0; i< img.width * img.height; i++){
   result.pixels[i]= color(0);
 }
   
-
-for(int x = 1; x<img.width-1;x++) {
-  for(int y = 1; y<img.height-1; y++) {    
-    int n_half = 1; // correspond à int(N/2) avec N =3
+int n_half = 1;
+for(int x = n_half; x<img.width-n_half;x++) {
+  for(int y = n_half; y<img.height-n_half; y++) {    
+     // correspond à int(N/2) avec N =3
     float count= 0;
     for(int i=x-n_half; i<=x+n_half; i++) {
       for(int j=y-n_half; j<=y+n_half; j++) {
@@ -684,13 +766,13 @@ return result;
 
 
 List<PVector> hough(PImage edgeImg, int nLines) {
-//*********
-//** TRY TO TUNE ME! *****
-//** TRY TO TUNE ME! *****
-//** TRY TO TUNE ME! *****
-//*********
+//*
+//* TRY TO TUNE ME! **
+//* TRY TO TUNE ME! **
+//* TRY TO TUNE ME! **
+//*
 //...............,´¯`,
-float discretizationStepsPhi = 0.01f; //.........,´¯`,..../
+float discretizationStepsPhi = 0.02f; //.........,´¯`,..../
 float discretizationStepsR = 1.5f; //....../¯/.../..../
 int minVotes=50; //..../../.../..../..,-----,
 //../../.../....//´...........`.
@@ -706,6 +788,18 @@ int phiDim = (int) (Math.PI / discretizationStepsPhi +1);
 //The max radius is the image diagonal, but it can be also negative
 int rDim = (int) ((sqrt(edgeImg.width*edgeImg.width +
 edgeImg.height*edgeImg.height) * 2) / discretizationStepsR +1);
+
+  // pre-compute the sin and cos values
+float[] tabSin = new float[phiDim];
+float[] tabCos = new float[phiDim];
+float ang = 0;
+float inverseR = 1.f / discretizationStepsR;
+for (int accPhi = 0; accPhi < phiDim; ang += discretizationStepsPhi, accPhi++) {
+// we can also pre-multiply by (1/discretizationStepsR) since we need it in the Hough loop
+tabSin[accPhi] = (float) (Math.sin(ang) * inverseR);
+tabCos[accPhi] = (float) (Math.cos(ang) * inverseR);
+}
+
 // our accumulator
 int[] accumulator = new int[phiDim * rDim];
 // Fill the accumulator: on edge points (ie, white pixels of the edge
@@ -715,14 +809,12 @@ for (int y = 0; y < edgeImg.height; y++) {
 for (int x = 0; x < edgeImg.width; x++) {
 // Are we on an edge?
 if (brightness(edgeImg.pixels[y * edgeImg.width + x]) != 0) {
-  float angle = 0;
-  for(int phi = 0; phi < phiDim; phi ++, angle +=discretizationStepsPhi ) {
-    float r = x * cos(angle) + y * sin(angle);
-    int index = (int) (r/discretizationStepsR + rDim/2);
+  for(int phi = 0; phi < phiDim; phi ++) {
+    int index = (int) (x*tabCos[phi] + y*tabSin[phi] + rDim/2);
     accumulator[ phi * rDim + index] += 1;//x · cos(ϕ) + y · sin(ϕ)
 
   }
-// ...determine here all the lines (r, phi) passing through
+// ...determine here all the lines (r, phi) passing throughx' 
 // pixel (x,y), convert (r,phi) to coordinates in the
 // accumulator, and increment accordingly the accumulator.
 // Be careful: r may be negative, so you may want to center onto
@@ -783,6 +875,7 @@ houghImg.updatePixels();
 //image(houghImg,0,0);
 //plot_lines(lines, houghImg);
 return lines;
+
 }
 
 void plot_lines(List<PVector> lines, PImage edgeImg) {
@@ -825,6 +918,5 @@ else
 line(x2, y2, x3, y3);
 }
 }
-
 }
 }
